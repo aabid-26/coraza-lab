@@ -1,0 +1,16 @@
+services:
+  waf:
+    build: .
+    ports:
+      - "127.0.0.1:8082:8080"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - api
+  api:
+    image: python:3.13-alpine
+    working_dir: /app
+    command: ["python", "-u", "server.py"]
+    volumes:
+      - ./app:/app:ro
+

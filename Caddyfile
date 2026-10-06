@@ -1,0 +1,29 @@
+{
+    admin off
+    auto_https off
+    order coraza_waf first
+}
+
+:8080 {
+    coraza_waf {
+        load_owasp_crs
+        directives `
+            Include @coraza.conf-recommended
+            Include @crs-setup.conf.example
+            Include @owasp_crs/*.conf
+            SecRuleEngine On
+            SecAuditEngine RelevantOnly
+            SecAuditLogType Serial
+            SecAuditLogFormat JSON
+            SecAuditLog /dev/stdout
+            SecRule ARGS:message "@contains waf-test" "id:10001,phase:2,t:none,deny,status:403,log,msg:'Learning rule matched'"
+            SecRule REQUEST_URI "@rx ^/private(?:/|\?|$)" "id:10002,phase:1,t:none,deny,status:403,log,msg:'Private path blocked in lab'"
+        `
+    }
+    reverse_proxy api:8000
+    log {
+        output stdout
+        format json
+    }
+}
+
